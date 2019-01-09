@@ -15,7 +15,7 @@ def read(fname):
 
 
 setup(
-    name='sample',
+    name='robot-jsonschemalibrary',
     version=VERSION,
     description='A Robot Framework library for JSON Schema validation.',
     long_description=read('README.rst'),
