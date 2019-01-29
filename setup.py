@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 install_requires = [

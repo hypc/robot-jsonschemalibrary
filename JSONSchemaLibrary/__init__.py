@@ -8,28 +8,39 @@ import json
 class JSONSchemaLibrary(object):
     ROBOT_LIBRARY_SCOPE = 'Global'
 
-    def __init__(self, schema_location='schemas'):
-        self._schema_location = schema_location
-        if not self._schema_location.endswith('/'):
-            self._schema_location = '{}/'.format(self._schema_location)
+    def __init__(self, schema_locations='schemas'):
+        if isinstance(schema_locations, str):
+            schema_locations = (schema_locations,)
+        elif isinstance(schema_locations, (list, tuple)):
+            schema_locations = schema_locations
+        else:
+            schema_locations = ('schemas',)
 
-    def validate_json(self, schema_path, data):
-        schema = self._load_schema(schema_path)
+        self._schema_locations = schema_locations
+
+    def validate_json(self, schema='', data=None):
+        if isinstance(schema, dict):
+            schema = schema
+        elif isinstance(schema, str) and schema != '':
+            schema = self._load_schema(schema)
+        else:
+            raise jsonschema.SchemaError('No Schema')
         try:
             jsonschema.validate(data, schema)
         except jsonschema.ValidationError as e:
             logger.debug(e)
             err_msg = 'Validation error for schema {}: {}'.format(
-                schema_path, e.message)
+                schema, e.message)
             raise jsonschema.ValidationError(err_msg)
 
     def _load_schema(self, schema_path):
         if os.path.isfile(schema_path):
-            schema_file = schema_path
-        else:
-            schema_file = '{}/{}'.format(self._schema_location, schema_path)
-            if not os.path.isfile(schema_file):
-                raise FileNotFoundError(
-                    'Schema file not found: {}'.format(schema_path))
-        schema = json.loads(open(schema_file).read())
-        return schema
+            return json.loads(open(schema_path).read())
+
+        for loc in self._schema_locations:
+            schema_file = '{}/{}'.format(loc, schema_path)
+            if os.path.isfile(schema_file):
+                return json.loads(open(schema_file).read())
+
+        raise FileNotFoundError(
+            'Schema file not found: {}'.format(schema_path))
